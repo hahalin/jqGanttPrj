@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>TimeScaleTypeHours</title>
+    <link href="Src/Styles/jQuery-ui-themes_v1.12.1/smoothness/jquery-ui.css" rel="stylesheet" />
+    <link href="Src/Styles/radiantq.gantt.default.css" rel="stylesheet" />
+    <link href="Src/Styles/VW.Grid.css" rel="stylesheet" />
+    <script src="Src/Scripts/jquery-3.6.0.min.js" type="text/javascript"></script>
+    <script type="text/javascript" src="Src/Scripts/jquery-ui-1.13.1/jquery-ui.min.js"></script>
+    <script src="Src/Scripts/Utils/date.js" type="text/javascript"></script>
+    <script src="Src/ResourceStrings/en-US.js" type="text/javascript"></script>
+    <script src='Src/Scripts/VW.Grid.1.min.js' type='text/javascript'></script>
+    <script src='Src/Scripts/RadiantQ-jQuery.Gantt.9.0.trial.min.js' type='text/javascript'></script>
+
+    <!-- In this sample the gantt is configured to zoom-in all the way to Hours in the time span headers.-->
+    <style type="text/css">
+        body {
+            margin: 0px;
+        }
+
+        .ui-datepicker {
+            font-size: 11px;
+        }
+    </style>
+    <script type="text/javascript">
+        var self = this, viewModel, jsonData,
+            $gantt_container, ganttControl,
+            chart, totalVisibleUnits = 24,
+            $GanttChart, $pagerLeftBtn, $pagerRightBtn, anchorTime, shortDateFormat = Date.CultureInfo.formatPatterns.shortDate + ' hh:mm:ss';;
+
+        // Retrieve JSON Data from file.
+        $.holdReady(true);
+        $.ajax({
+            type: "GET",
+            dataType: 'json',
+            url: 'TimeScaleTypeHours.json',
+            converters:
+            {
+                "text json": function (data) {
+                    return $.parseJSON(data, true /*converts date strings to date objects*/, true /*converts ISO dates to local dates*/);
+                }
+            },
+            success: function (data) {
+                self.jsonData = data;
+                $.holdReady(false);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert(errorThrown);
+                console.log(errorThrown);
+                self.jsonData = [];
+                $.holdReady(false);
+            }
+        });
+
+        // SetViewHeight will be called by a containing sample browser, if any.
+        function SetViewHeight(height) {
+            if ($gantt_container && $gantt_container.data("GanttControl")) {
+                $gantt_container.data("GanttControl").setHeight(height - $("#timeline").outerHeight(true));
+                $("#pagecontent").height(height);
+            }
+        }
+
+        $(document).ready(function () {
+            var columns = [
+                {
+                    field: "Activity_M().ID_M()",
+                    title: "ID",
+                    iseditable: false,
+                    width: 25
+                },
+                {
+                    field: "Activity_M().ActivityName_M()",
+                    title: "Activity Name",
+                    width: 150,
+                    editor: RadiantQ.Default.Template.ProjectGanttExpandableTextboxEditor(),
+                    template: RadiantQ.Default.Template.ProjectGanttExpandableTextBlockTemplate()
+                },
+                {
+                    field: "Activity_M().StartTime_M()",
+                    title: "StartTime",
+                    width: 150,
+                    format: Date.CultureInfo.formatPatterns.shortDate,
+                    editor: "<input data-bind='ActivityTimeBinder:Activity_M().StartTime_M' />"
+                },
+                {
+                    field: "Activity_M().EndTime_M()",
+                    title: "EndTime",
+                    width: 150,
+                    format: Date.CultureInfo.formatPatterns.shortDate,
+                    editor: "<input data-bind='value:Activity_M().EndTime_M' data-getvalueName='getDate' data-setvaluename='setDate'  data-valueUpdate='onBlur'  data-role=\"DateTimePicker\"  />"
+                },
+                {
+                    field: "Activity_M().Effort_M()",
+                    title: "Effort",
+                    width: 100,
+                    template: '<div> ${ data.Activity_M().CumulativeEffort_M().toString() } </div>',
+                    editor: "<input data-bind='value:Activity_M().Effort_M'  data-role=\"DurationPicker\"  />"
+                },
+                {
+                    field: "Activity_M().ProgressPercent_M()",
+                    title: "ProgressPercent",
+                    width: 120,
+                    editor: "<input   data-bind='value:Activity_M().ProgressPercent_M' data-role=\"spinner\" data-options='{\"min\":0, \"max\": 100}' />"
+                },
+                {
+                    field: "Activity_M().Assignments_M()",
+                    title: "Resource",
+                    iseditable: false,
+                    template: '<div> ${ RadiantQ.Gantt.ValueConverters.ConverterUtils.GetResourcesText(data.Activity_M().Assignments_M(), false) } </div>',
+                    width: 100
+                },
+                {
+                    field: "Activity_M().PredecessorIndexString_M()",
+                    title: "PredecessorIndex",
+                    isParentEditable: false,
+                    template: "<div>${data.PredecessorIndexString_M() || '' }</div>",
+                    editor: "<input data-bind='value:Activity_M().PredecessorIndexString_M'/>",
+                    width: 150
+                }];
+
+            var $schedule = $("#schedule").change(function (newChoice) {
+                var schedule = getSelectedSchedule(this.value);
+                updateGantt(self.jsonData, schedule);
+            });
+            // Determine the time the timeline in the gantt should scroll to.
+            anchorTime = new Date(2020, 10, 19, 24, 00, 00);
+            var tmshs = new RadiantQ.Gantt.TimeScaleHeaderDefinitions();
+            var dayHeader = self.dayHeaderLine();
+            var hoursHeader = self.hoursHeaderLine();
+            var hoursHeader2 = self.hoursHeaderLine2();
+            
+            tmshs.add(dayHeader);
+            tmshs.add(hoursHeader);
+            tmshs.add(hoursHeader2);
+            //
+            
+            window.tms = tmshs;
+
+            var nowLineBufferTime = 1000 * 6;
+
+            $gantt_container = $("#gantt_container");
+            $gantt_container.GanttControl({
+                ProjectStartDate: anchorTime,
+                TimeScaleHeaders: tmshs,
+                ZoomOptions: RadiantQ.Gantt.ChartZoomOptions.Auto,
+                MinTimeUnitWidthForHeaderVisibility: 20,
+                //MinTimeUnitWidthForHeaderVisibility: 10,
+                //BaseTimeUnitWidthMaximum: 150,
+                //BaseTimeUnitWidthMinimum: 0.5,
+                //BaseTimeUnitWidth: 31,
+                WorkTimeSchedule: null,
+                RoundTimeEditsTo: RadiantQ.Gantt.RoundToOptions.Minute,
+                DataSource: self.jsonData,
+                GanttTableOptions: {
+                    columns: columns,
+                },
+                GanttChartTemplateApplied: function (sender, args) {
+                    $GanttChart = args.element;
+                    window.gd = args.element;
+                    $GanttChart.GanttChart({ AnchorTime: anchorTime, ResizeToFit_: true });
+                },
+                NowLineRefreshFrequency: nowLineBufferTime
+            });
+
+            // To update the Gantt Width & Height based on SampleBrowser, if any.
+            if (window.parent && window.parent.FitToWindow)
+                window.parent.FitToWindow();
+
+            ganttControl = $gantt_container.data("GanttControl");
+            chart = ganttControl.GetGanttChart().data("GanttChart");
+            chart.ViewportTimeRangeChanged.subscribe(viewportTimeRangeChanged);
+            $pagerLeftBtn = $(".rq-gc-pager-left-Button", chart.HDockPanel);
+            $pagerRightBtn = $(".rq-gc-pager-right-Button", chart.HDockPanel);
+            PagerButonsClick();
+            addSpecialLineInfo(chart);
+        });
+
+        function updateGantt(data, schedule) {
+            if (schedule == null) {
+                totalVisibleUnits = 24;
+                anchorTime = anchorTime.Date().clone();
+            }
+            else {
+                totalVisibleUnits = 8;
+                anchorTime = data[0].StartTime.Date().clone().addHours(8);
+            }
+            $gantt_container.GanttControl("option", "DataSource", null);
+            $gantt_container.GanttControl({
+                WorkTimeSchedule: schedule,
+                DataSource: data
+            });
+            updateGanttAnchorTime(anchorTime);
+        }
+
+        function PagerButonsClick() {
+            $pagerLeftBtn.on('click', function () {
+                anchorTime = anchorTime.clone().addDays(-1);
+                updateGanttAnchorTime(anchorTime);
+            });
+            $pagerRightBtn.on('click', function () {
+                anchorTime = anchorTime.clone().addDays(1);
+                updateGanttAnchorTime(anchorTime);
+            });
+        }
+
+        function updateGanttAnchorTime(anchorTime) {
+            // First set the source to null and then set the new source.
+            $GanttChart.GanttChart({ AnchorTime: anchorTime });
+        }
+
+        //this will be called when the activities are created.
+        function getSelectedSchedule(value) {
+            switch (value) {
+                case "24X7":
+                    return null;
+                    break;
+                case "8X5":
+                default:
+                    return RadiantQ.Gantt.WorkTimeSchedule.Schedule8X5;
+                    break;
+            }
+        }
+        function addSpecialLineInfo(sender) {
+            var gcOptions = sender.options;
+            var baseTimeValue = chart.options.ViewWidth / totalVisibleUnits;
+            // The Day TimeLine only visible if the "BaseTimeUnitWidth" value is less than 10, 
+            //    Because "MinTimeUnitWidthForHeaderVisibility" minimum value is 10.
+            if (gcOptions.BaseTimeUnitWidth != baseTimeValue) {
+                $gantt_container.GanttControl({
+                    BaseTimeUnitWidth: baseTimeValue
+                });
+            }
+            // Adding special lines to the timeline.
+            gcOptions.SpecialLineInfos.clear();
+            var visStart = sender.VisualStartTime;
+            var date = new Date(visStart.getFullYear(), visStart.getMonth(), visStart.getDate(), visStart.getHours(), 00, 00, 00);
+            var visEnd = sender.VisualEndTime;
+            var endDate = new Date(visEnd.getFullYear(), visEnd.getMonth(), visEnd.getDate(), visEnd.getHours(), 00, 00, 00);
+            while (date <= endDate) {
+                var spl = new RadiantQ.Gantt.SpecialLineInfo();
+                spl.LineDateTime = date.clone();
+                spl.LineColor = "#aaaaaa";
+                var dateTimePeriod = getDateTimePeriod(date);
+                spl.ToolTipText = date.getMonthName() + " " + date.getDate() + ", " + dateTimePeriod[0].toString() + dateTimePeriod[1];
+                gcOptions.SpecialLineInfos.add(spl);
+                date = date.clone().addHours(1);
+            }
+        }
+        function viewportTimeRangeChanged(sender, args) {
+            addSpecialLineInfo(sender);
+        }
+        // this function is used to get the hour with AM/PM.
+        function getDateTimePeriod(date) {
+            var time = date.getHours();
+            var hours = time - 12;
+            var mid = 'am';
+            if (hours < 0) { //At 00 hours we need to show 12 am
+                hours = time;
+            }
+            else if (hours > 0) {
+                hours = hours % 12;
+                mid = 'pm';
+            }
+            else {
+                hours = 12;
+                mid = 'pm';
+            }
+            return [hours, mid];
+        }
+        // hour header definition.
+        function hoursHeaderLine() {
+            var hoursHeader = new RadiantQ.Gantt.TimeScaleHeaderDefinition();
+            hoursHeader.Type = ns_gantt.TimeScaleType.Hours;
+            return hoursHeader;
+        }
+
+        function hoursHeaderLine2() {
+            var fifteenMinHeader = new ns_gantt.TimeScaleHeaderDefinition();
+            fifteenMinHeader.name("2hrs");
+            fifteenMinHeader.Type = ns_gantt.TimeScaleType.Custom;
+            fifteenMinHeader.CustomTimeScaleTypeHint = new RadiantQ.Gantt.CustomTimeScaleTypeHint(2, ns_gantt.TimeScaleType.Hours);            
+            fifteenMinHeader.ProvideCustomHeaderText.subscribe(provideCustomHeaderText);
+            fifteenMinHeader.ProvideCustomTimeIntervals.subscribe(ProvideCustomTimeIntervals);
+            // gets called when the text render in timeunit
+            function provideCustomHeaderText(sender, args) {
+                var time = args.dateTime;
+                // This would be case for partial headers.
+                //console.log(time);
+                if ((time.getHours() % 2) != 0) {
+                    args.Text = "";
+                    //args.Text = time.getDate();
+                }
+                else
+                    args.Text = time.getHours();
+            }
+            // to provide range to render the timeunit
+            function ProvideCustomTimeIntervals(sender, e) {
+                var start = e.ViewStartTime.clone();
+                var quotient = Math.floor(start.getHours() / 2);
+                console.log('start',start);
+                console.log('quotient',quotient);
+                start = new Date(start.getFullYear(), start.getMonth(), start.getDate(),2*quotient,0,0);
+                if (e.ViewStartTime.isGreaterThan(start))
+                    start = start.clone().addHours(2);
+                for (   var dateTime = start; 
+                        (e.ViewEndTime.isGreaterThan(dateTime) || dateTime.equals(e.ViewEndTime)) ; 
+                        dateTime = dateTime.clone().addHours(2)
+                    )
+                {
+                    console.log('push',dateTime);
+                    e.TimeIntervals.push(dateTime);
+                }
+            }
+            return fifteenMinHeader;
+        }
+        // day header definition.
+        function dayHeaderLine() {
+            var daysHeader = new RadiantQ.Gantt.TimeScaleHeaderDefinition();
+            daysHeader.TextFormat = "dd MMMM yyyy";
+            daysHeader.Type = ns_gantt.TimeScaleType.Days;
+            return daysHeader;
+        }
+
+        function semiAnnualHeadercustomHeaderLine() {
+            var semiAnnualHeader = new ns_gantt.TimeScaleHeaderDefinition();
+            semiAnnualHeader.name("semiAnnualHeader");
+            semiAnnualHeader.Type = ns_gantt.TimeScaleType.Custom;
+            semiAnnualHeader.CustomTimeScaleTypeHint = new
+                RadiantQ.Gantt.CustomTimeScaleTypeHint(6, ns_gantt.TimeScaleType.Months);
+            semiAnnualHeader.ProvideCustomHeaderText.subscribe(provideCustomHeaderText);
+            semiAnnualHeader.ProvideCustomTimeIntervals.subscribe(
+                ProvideCustomTimeIntervals);
+            // Step 2: Provide the custom intervals for this header for a given time span
+            function ProvideCustomTimeIntervals(sender, args) {
+                var start = args.ViewStartTime.clone();
+                if (args.ViewStartTime.getMonth() < 6)
+                    start = new Date(start.getFullYear(), 6, 1);
+                else
+                    start = new Date(start.getFullYear() + 1, 0, 1);
+                for (var dateTime = start.clone(); args.ViewEndTime.compareTo(dateTime) >= 0;
+                    dateTime = dateTime.clone().addMonths(6)) {
+                    var t = dateTime.clone().addMonths(6);
+                    args.TimeIntervals.push(dateTime.clone());
+                }
+            }
+            // Step 3: Provide the header text for this custom headers
+            function provideCustomHeaderText(sender, args) {
+                args.TooltipText = args.dateTime.getFullYear().toString();
+                var half = ((args.dateTime.getMonth()) / 6) + 1;
+                args.Text = "H" + Math.floor(half); // Displays H1 or H2
+            }
+            return semiAnnualHeader;
+        }
+
+
+    </script>
+</head>
+
+<body>
+    <div id="pagecontent" style="height: 600px;">
+        <div id="timeline" style="height: 30px; font-size: 13px; margin-bottom: 10px; font-family: 'Verdana';">
+            Select Schedule:
+            <select id="schedule">
+                <option selected="selected" value="24X7">24 Hours; 7 days</option>
+                <option value="8X5">8AM to 4PM; 5 days</option>
+            </select>
+        </div>
+        <!-- Div that will be transformed into the gantt widget above.-->
+        <div id="gantt_container" style="height: 100%;">
+        </div>
+    </div>
+</body>
+
+</html>

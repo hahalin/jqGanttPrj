@@ -1,0 +1,119 @@
+﻿ [{
+    "Name" : "Task 1",
+    "ID" : 1,
+    "StartTime" : "2020-11-20T00:00:00Z",
+    "Effort" : "3:00:00",
+    "Description" : "Description of Task 1"
+}, 
+{
+    "Name" : "Task 2",
+    "ID" : 2,
+    "PredecessorIndices" : "1",
+    "StartTime" : "2020-11-20T00:00:00Z",
+    "Effort" : "5:00:00",
+    "Description" : "Description of Task 2"
+}, 
+{
+    "Name" : "Task 3",
+    "ID" : 3,
+    "StartTime" : "2020-11-20T00:00:00Z",
+    "Effort" : "3:00:00",
+    "ProgressPercent" : 90,
+    "Description" : "Description of Task 3"      
+}, 
+{
+    "Name" : "Child Task 1",
+    "ID" : 4,
+    "IndentLevel" : 1,
+    "StartTime" : "2020-11-20T01:00:00Z",
+    "Effort" : "2:55:00",
+    "ProgressPercent" : 75,
+    "Description" : "Description of Task 3/Child Task 1"
+}, 
+{
+    "Name" : "Child Task 2",
+    "ID" : 5,
+    "IndentLevel" : 1,
+	"PredecessorIndices":"4",
+    "StartTime" : "2020-11-20T00:00:00Z",
+    "Effort" : "3:00:00",
+    "Description" : "Description of Task 3/Child Task 2"
+}, 
+{
+    "Name" : "Grand Child Task 1",
+    "ID" : 6,
+    "IndentLevel" : 2,
+    "StartTime" : "2020-11-20T00:00:00Z",
+    "Effort" : "2:45:00",
+    "Description" : "Description of Task 3/Child Task 1/Grand Child 1"
+}, 
+{
+    "Name" : "Grand Child Task 2",
+    "ID" : 7,
+    "IndentLevel" : 2,
+    "StartTime" : "2020-11-20T02:00:00Z",
+    "Effort" : "3:10:00",
+    "Description" : "Description of Task 3/Child Task 1/Grand Child 2"
+}, 
+{
+    "Name" : "Child Task 3",
+    "ID" : 8,
+    "IndentLevel" : 1,
+    "StartTime" : "2020-11-20T00:20:00Z",
+    "Effort" : "3:30:00",
+    "Description" : "Description of Task 3/Child Task 3"
+}, 
+{
+    "Name" : "Task 4",
+    "ID" : 9,
+    "StartTime" : "2020-11-20T00:00:00Z",    
+    "ProgressPercent" : 60,
+    "Description" : "Description of Task 4"
+}, 
+{
+    "Name" : "Task 5",
+    "ID" : 10,
+    "StartTime" : "2020-11-20T00:00:00Z",
+	 "Effort" : "4:00:00",
+    "Description" : "Description of Task 5"   
+}, 
+{
+    "Name" : "Child Task 1",
+    "ID" : 11,
+    "IndentLevel" : 1,
+    "StartTime" : "2020-11-20T02:00:00Z",
+    "Effort" : "4:00:00",
+    "Description" : "Description of Task 5/Child Task 1"
+}, 
+{
+    "Name" : "Child Task 2",
+    "ID" : 12,
+    "IndentLevel" : 1,
+    "StartTime" : "2020-11-20T00:00:00Z",
+    "Effort" : "2:59:00",
+	"PredecessorIndices":"11SS",
+    "Description" : "Description of Task 5/Child Task 2"
+}, 
+{
+    "Name" : "Task 6",
+    "ID" : 13,
+    "StartTime" : "2020-11-20T00:00:00Z",
+    "Effort" : "3:00:00",
+    "Description" : "Description of Task 6"  
+}, 
+{
+    "Name" : "Child Task 1",
+    "ID" : 14,
+    "IndentLevel" : 1,
+    "StartTime" : "2020-11-20T00:00:00Z",
+    "Effort" : "4:00:00",
+    "Description" : "Description of Task 6/Child Task 1"   
+}, 
+{
+    "Name" : "Grand Child Task 1",
+    "ID" : 15,
+    "StartTime" : "2020-11-20T01:00:00Z",
+    "Effort" : "3:00:00",
+    "IndentLevel" : 2,
+    "Description" : "Description of Task 6/Child Task 2"
+}]
