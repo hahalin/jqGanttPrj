@@ -128,11 +128,11 @@
             var tmshs = new RadiantQ.Gantt.TimeScaleHeaderDefinitions();
             var dayHeader = self.dayHeaderLine();
             var hoursHeader = self.hoursHeaderLine();
-            var hoursHeader2 = self.hoursHeaderLine2();
+            //var hoursHeader2 = ;
             
             tmshs.add(dayHeader);
             tmshs.add(hoursHeader);
-            tmshs.add(hoursHeader2);
+            tmshs.add(self.hoursHeaderLine2(2));
             //
             
             window.tms = tmshs;
@@ -275,11 +275,12 @@
             return hoursHeader;
         }
 
-        function hoursHeaderLine2() {
+        function hoursHeaderLine2(scale) {
+            
             var fifteenMinHeader = new ns_gantt.TimeScaleHeaderDefinition();
             fifteenMinHeader.name("2hrs");
             fifteenMinHeader.Type = ns_gantt.TimeScaleType.Custom;
-            fifteenMinHeader.CustomTimeScaleTypeHint = new RadiantQ.Gantt.CustomTimeScaleTypeHint(2, ns_gantt.TimeScaleType.Hours);            
+            fifteenMinHeader.CustomTimeScaleTypeHint = new RadiantQ.Gantt.CustomTimeScaleTypeHint(scale, ns_gantt.TimeScaleType.Hours);            
             fifteenMinHeader.ProvideCustomHeaderText.subscribe(provideCustomHeaderText);
             fifteenMinHeader.ProvideCustomTimeIntervals.subscribe(ProvideCustomTimeIntervals);
             // gets called when the text render in timeunit
@@ -287,7 +288,7 @@
                 var time = args.dateTime;
                 // This would be case for partial headers.
                 //console.log(time);
-                if ((time.getHours() % 2) != 0) {
+                if ((time.getHours() % scale) != 0) {
                     args.Text = "";
                     //args.Text = time.getDate();
                 }
@@ -297,15 +298,15 @@
             // to provide range to render the timeunit
             function ProvideCustomTimeIntervals(sender, e) {
                 var start = e.ViewStartTime.clone();
-                var quotient = Math.floor(start.getHours() / 2);
+                var quotient = Math.floor(start.getHours() / scale);
                 console.log('start',start);
                 console.log('quotient',quotient);
-                start = new Date(start.getFullYear(), start.getMonth(), start.getDate(),2*quotient,0,0);
+                start = new Date(start.getFullYear(), start.getMonth(), start.getDate(),scale*quotient,0,0);
                 if (e.ViewStartTime.isGreaterThan(start))
-                    start = start.clone().addHours(2);
+                    start = start.clone().addHours(scale);
                 for (   var dateTime = start; 
                         (e.ViewEndTime.isGreaterThan(dateTime) || dateTime.equals(e.ViewEndTime)) ; 
-                        dateTime = dateTime.clone().addHours(2)
+                        dateTime = dateTime.clone().addHours(scale)
                     )
                 {
                     console.log('push',dateTime);
