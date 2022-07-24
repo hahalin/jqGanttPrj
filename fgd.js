@@ -6,7 +6,7 @@ $.holdReady(true);
 $.ajax({
     type: "GET",
     dataType: 'json',
-    url: 'json/OverlappedTasksRendering.json',
+    url: 'fgd.json',
     converters:
     {
         "text json": function (data) {
@@ -33,8 +33,23 @@ function SetViewHeight(height) {
         $("#pagecontent").height(height);
     }
 }
-
+var itype=1;
 $(document).ready(function () {
+
+    $('#btna').on('click',function(){
+
+        let g= $('#gantt_container').data();
+        let ds=g.FlexyGantt.options.DataSource
+        g.FlexyGantt.UpdateDatasource(ds);
+
+        return;
+
+        $gantt_container.FlexyGantt({
+            DataSource: self.jsonData
+        });
+
+    });
+
     insertIsOverlappingObject(self.jsonData);
     // Determine the time the timeline in the gantt should scroll to.
     var anchorTime = new Date(2020, 03, 02, 00, 00, 00);
@@ -54,6 +69,7 @@ $(document).ready(function () {
             template: RadiantQ.Default.Template.FlexyGanttExpandableTextBlockTemplate("nameConverter")
         }];
     // Binder to handle the overlapped taskbars. 
+    
     RadiantQ.Binder.OverlappingBinder = function ($elem, role, value, data) {
         this.element = $elem;
         this.value = value;
@@ -62,15 +78,26 @@ $(document).ready(function () {
         this.init = function () {
             this.element.removeClass("bluebar_style");
             this.element.removeClass("redbar_style");
-            if (this.data.IsOverlapping == true)
-                this.element.addClass("redbar_style");
-            else
-                this.element.addClass("bluebar_style");
+            if (this.data.runQty === true)
+            {
+                //console.log(this);
+                //$(this.element).removeAttr('style');
+                //this.element.addClass("moveQtyBar");
+                
+                
+            }
+                //this.element.addClass("redbar_style");
+            //else
+                //this.element.addClass("bluebar_style");
+
         }
         this.refresh = function () {
             this.init();
         }
     }
+
+    insertIsOverlappingObject(self.jsonData);
+
     $gantt_container.FlexyGantt({
         DataSource: self.jsonData,
         //the FlexyGantt is bound to  resolve the hierarchy of Team/Resources/Tasks.
@@ -82,8 +109,8 @@ $(document).ready(function () {
         },
         GanttChartTemplateApplied: function (sender, args) {
             var $GanttChart = args.element;
-            console.log($GanttChart);
-            window.fgd=$GanttChart;
+            //console.log($GanttChart);
+            window.fgd = $GanttChart;
             $GanttChart.GanttChart({ AnchorTime: anchorTime });
             $GanttChart.GanttChart({ AnchorTime: new Date('2020/04/05') });
         },
@@ -98,7 +125,39 @@ $(document).ready(function () {
         ParentTaskEndTimeProperty: "PEndTime",
         TasksListProperty: "Tasks",
         OverlappedTasksRenderingOptimization: RadiantQ.FlexyGantt.OverlappedTasksRenderingOptimization.ShrinkHeight,
-        TaskTooltipTemplate: $("#TaskTooltipTemplate").html()
+        TaskTooltipTemplate: $("#TaskTooltipTemplate").html(),
+        RowHeightBinding:
+        {
+            Property: 'MaxOverlappingBlocksRowCount',
+            Converter: function (value) {
+                //return value *22;
+                return value * (22 + ((value + 1) * 2));
+            }
+        },
+        OnTaskBarLoad: function (sender, tr) {
+            var taskBar = sender.options;
+            var data = this[0].DataContext;
+            //console.log(data.runQty);
+            //this.css('display', 'none');
+            this.css('height',20);
+            if (data.runQty===true)
+            {
+                $('.parentStyle', $(this)).remove();
+                $(this).addClass("moveQtyBar");
+                return;
+                console.log(this);
+
+                $(this).css({
+                    "background-color": 'white',
+                    "background-image":'none',
+                    'border-radius':0,
+                    'margin-top':24,
+                    'height':15
+                });
+
+            }
+            
+        },
     });
 
     // To update the Gantt Width & Height based on SampleBrowser, if any.
@@ -106,17 +165,17 @@ $(document).ready(function () {
         window.parent.FitToWindow();
     }
 
-    
 
-//fgd.data("GanttChart").
 
-//let gd=self.$gantt_container.data("FlexyGantt");
+    //fgd.data("GanttChart").
 
-let d=$('#gantt_container').data();
+    //let gd=self.$gantt_container.data("FlexyGantt");
 
-let ds=d['FlexyGantt'];
+    let d = $('#gantt_container').data();
 
-    
+    let ds = d['FlexyGantt'];
+
+
 });
 
 // to get the name from the bounded list

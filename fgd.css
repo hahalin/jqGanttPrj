@@ -1,0 +1,39 @@
+div.redbar_style {
+    height: 20px;
+    /* For IE8 */
+    filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='Images/redBar.png',sizingMethod='scale') !important;
+    background-image: url(Images/redBar.png) !important;
+    -moz-background-size: 100% 100% !important; /* Firefox 3.6 */
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    border: 1px solid red !important;
+    border-radius: 7px !important;
+    float: left !important;
+    position: absolute !important;
+    z-index: 10 !important;
+    cursor: move;
+}
+
+div.bluebar_style {
+    height: 20px;
+    /* For IE8 */
+    filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='Src/Styles/Images/TaskBar.png',sizingMethod='scale') !important;
+    background-image: url(Src/Styles/Images/TaskBar.png) !important;
+    -moz-background-size: 100% 100% !important; /* Firefox 3.6 */
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    border: 1px solid #050DFA !important;
+    border-radius: 7px !important;
+    float: left !important;
+    position: absolute !important;
+    z-index: 10 !important;
+    cursor: move;
+}
+
+body {
+    margin: 0px;
+}
+
+.ui-datepicker {
+    font-size: 11px;
+}
