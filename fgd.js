@@ -181,3 +181,38 @@ function insertIsOverlappingObject(jsonData) {
         }
     }
 }
+
+/*
+
+let g= $('#gantt_container').data();
+//g.FlexyGantt.SetStartTime(new Date('2020/04/05'));
+//g.FlexyGantt.TrySetEndTime(new Date('2020/04/07'));
+let ds=g.FlexyGantt.options.DataSource.map(n=>n);
+ds.forEach(n=>{
+    n.Resources.forEach(r=>{
+      
+      r.Tasks=r.Tasks.filter(t=>{
+        
+        return (new Date(t.StartTime)) - (new Date('2020/4/6'))>0;
+      });
+      //console.log(r.Tasks);  
+  });
+});
+//console.log(ds);
+g.FlexyGantt.UpdateDatasource(ds);
+
+*/
+
+/*
+
+Math.round
+Math.trunc
+Math.ceil
+Math.floor
+
+let t0=new Date();
+let t=new Date(t0.valueOf());
+t.setHours(0);t.setMinutes(0);t.setSeconds(0);
+console.log(t0);
+console.log((t0-t)/(60));
+*/
